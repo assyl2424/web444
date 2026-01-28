@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Analytics</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<select id="field">
+  <option value="field1">Field 1</option>
+  <option value="field2">Field 2</option>
+  <option value="field3">Field 3</option>
+</select>
+
+<button onclick="loadData()">Load</button>
+
+<canvas id="chart"></canvas>
+
+<pre id="metrics"></pre>
+
+<script>
+let chart;
+
+async function loadData() {
+  const field = document.getElementById("field").value;
+
+  const res = await fetch(`/api/measurements?field=${field}`);
+  const data = await res.json();
+
+  const labels = data.map(d => new Date(d.timestamp).toLocaleDateString());
+  const values = data.map(d => d.value);
+
+  if (chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("chart"), {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: field,
+        data: values
+      }]
+    }
+  });
+
+  const m = await fetch(`/api/measurements/metrics?field=${field}`);
+  document.getElementById("metrics").innerText =
+    JSON.stringify(await m.json(), null, 2);
+}
+</script>
+
+</body>
+</html>
